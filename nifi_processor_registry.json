@@ -1,0 +1,204 @@
+{
+  "InvokeHTTP": {
+    "type": "org.apache.nifi.processors.standard.InvokeHTTP",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-standard-nar",
+      "version": "2.7.2"
+    },
+    "description": "Standard REST API Caller. Handles GET, POST, PUT, DELETE with payload support.",
+    "relationships": {
+      "active": [
+        "Response"
+      ],
+      "auto_terminate_by_default": [
+        "Failure",
+        "No Retry",
+        "Original",
+        "Retry"
+      ],
+      "all_available": [
+        "Response",
+        "Retry",
+        "No Retry",
+        "Original",
+        "Failure"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "HTTP Method": "GET",
+        "HTTP URL": null,
+        "Connection Timeout": "5 secs",
+        "Socket Read Timeout": "15 secs",
+        "Content-Type": "${mime.type}",
+        "Request Body Enabled": "true",
+        "Response Generation Required": "true",
+        "SSL Context Service": null
+      }
+    }
+  },
+  "HandleHttpRequest": {
+    "type": "org.apache.nifi.processors.standard.HandleHttpRequest",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-standard-nar",
+      "version": "2.7.2"
+    },
+    "description": "Standard HTTP Entry Point (Source). Listens on a local port.",
+    "relationships": {
+      "active": [
+        "success"
+      ],
+      "auto_terminate_by_default": [],
+      "all_available": [
+        "success"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "Hostname": "localhost",
+        "Listening Port": "7808",
+        "HTTP Protocols": "HTTP_1_1",
+        "Allow POST": "true",
+        "Allow GET": "true",
+        "Parameters to Attributes": ".*",
+        "Multipart Request Max Size": "1 MB",
+        "Multipart Read Buffer Size": "512 KB",
+        "HTTP Context Map": null
+      }
+    }
+  },
+  "HandleHttpResponse": {
+    "type": "org.apache.nifi.processors.standard.HandleHttpResponse",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-standard-nar",
+      "version": "2.7.2"
+    },
+    "description": "Standard HTTP Exit Point (Sink). Returns data to the client.",
+    "relationships": {
+      "active": [],
+      "auto_terminate_by_default": [
+        "success",
+        "failure"
+      ],
+      "all_available": [
+        "success",
+        "failure"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "HTTP Status Code": "${invokehttp.status.code}",
+        "HTTP Context Map": null,
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  "EvaluateJsonPath": {
+    "type": "org.apache.nifi.processors.standard.EvaluateJsonPath",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-standard-nar",
+      "version": "2.7.2"
+    },
+    "description": "JSON Parser. Extracts fields into FlowFile attributes.",
+    "relationships": {
+      "active": [
+        "matched"
+      ],
+      "auto_terminate_by_default": [
+        "failure",
+        "unmatched"
+      ],
+      "all_available": [
+        "success",
+        "failure",
+        "unmatched"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "Destination": "flowfile-attribute|flowfile-content",
+        "Return Type": "auto-detect",
+        "Path Not Found Behavior": "ignore"
+      }
+    }
+  },
+  "ReplaceText": {
+    "type": "org.apache.nifi.processors.standard.ReplaceText",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-standard-nar",
+      "version": "2.7.2"
+    },
+    "description": "Data Formatter. Replaces content using regex or literal strings.",
+    "relationships": {
+      "active": [
+        "success"
+      ],
+      "auto_terminate_by_default": [
+        "failure"
+      ],
+      "all_available": [
+        "success",
+        "failure"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "Replacement Value": null,
+        "Search Value": "(?s)(^.*$)",
+        "Replacement Strategy": "Literal Replace",
+        "Evaluation Mode": "Entire text"
+      }
+    }
+  },
+  "UpdateAttribute": {
+    "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-update-attribute-nar",
+      "version": "2.7.2"
+    },
+    "description": "Attribute Modifier. Sets static or dynamic flow-metadata.",
+    "relationships": {
+      "active": [
+        "success"
+      ],
+      "auto_terminate_by_default": [],
+      "all_available": [
+        "success"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "Store State": "Do not store state"
+      }
+    }
+  },
+  "RouteOnAttribute": {
+    "type": "org.apache.nifi.processors.standard.RouteOnAttribute",
+    "bundle": {
+      "group": "org.apache.nifi",
+      "artifact": "nifi-standard-nar",
+      "version": "2.7.2"
+    },
+    "description": "Conditional Router. Sends FlowFiles to different branches based on attributes.",
+    "relationships": {
+      "active": [],
+      "auto_terminate_by_default": [
+        "unmatched"
+      ],
+      "all_available": [
+        "unmatched"
+      ]
+    },
+    "config_template": {
+      "properties": {
+        "Routing Strategy": "Route to Property name"
+      }
+    }
+  }
+}

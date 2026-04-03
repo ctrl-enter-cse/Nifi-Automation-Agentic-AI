@@ -1,0 +1,33 @@
+{
+  "generation_rules": [
+    {
+      "id": "intent_analysis",
+      "description": "Analyze CURL to determine flow intent (e.g., PROXY_PASS, MULTIPART_UPLOAD)"
+    },
+    {
+      "id": "registry_lookup",
+      "description": "Fetch processor structures from nifi_processor_registry.json",
+      "required_processors": [
+        "HandleHttpRequest",
+        "InvokeHTTP",
+        "HandleHttpResponse",
+        "EvaluateJsonPath",
+        "UpdateAttribute",
+        "ReplaceText",
+        "RouteOnAttribute"
+      ]
+    },
+    {
+      "id": "template_mapping",
+      "description": "Inject dynamic properties (URLs, Headers, Auth) into processor configs"
+    },
+    {
+      "id": "wiring_logic",
+      "description": "Establish success/response relationships between processors"
+    },
+    {
+      "id": "deployment_sync",
+      "description": "Create Process Group and synchronize run status"
+    }
+  ]
+}

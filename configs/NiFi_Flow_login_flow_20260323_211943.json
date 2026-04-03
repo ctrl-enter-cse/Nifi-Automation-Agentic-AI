@@ -1,0 +1,198 @@
+{
+  "processors": {
+    "EvaluateJsonPath": {
+      "id": "d3a558bc-56dd-3f20-cef4-34b5a134712e",
+      "type": "org.apache.nifi.processors.standard.EvaluateJsonPath",
+      "properties": {
+        "Destination": "flowfile-attribute",
+        "Return Type": "auto-detect",
+        "Path Not Found Behavior": "ignore",
+        "Null Value Representation": "empty string",
+        "Max String Length": "20 MB",
+        "errorCode": "$.errorResponse.statusCode",
+        "errorDesc": "$.errorResponse.description",
+        "errorReason": "$.errorResponse.statusreason"
+      },
+      "state": "RUNNING"
+    },
+    "InvokeHTTP": {
+      "id": "71cedc92-94d4-37db-929f-6d3d7ab5c05d",
+      "type": "org.apache.nifi.processors.standard.InvokeHTTP",
+      "properties": {
+        "HTTP Method": "POST",
+        "HTTP URL": "https://uatgateway.federal.bank.in/fedbnk/uat/dms/v1.0.0/login?username=${username:urlEncode()}&password=${password:urlEncode()}",
+        "HTTP/2 Disabled": "False",
+        "SSL Context Service": "b98fadba-019c-1000-5fd1-c7bca8462b72",
+        "Connection Timeout": "5 secs",
+        "Socket Read Timeout": "15 secs",
+        "Socket Write Timeout": "15 secs",
+        "Socket Idle Timeout": "5 mins",
+        "Socket Idle Connections": "5",
+        "Proxy Configuration Service": null,
+        "Request OAuth2 Access Token Provider": null,
+        "OAuth2 Access Token Refresh Strategy": "ON_TOKEN_EXPIRATION",
+        "Request Username": null,
+        "Request Password": null,
+        "Request Digest Authentication Enabled": "false",
+        "Request Failure Penalization Enabled": "false",
+        "Request Body Enabled": "false",
+        "Request Multipart Form-Data Name": null,
+        "Request Multipart Form-Data Filename Enabled": "true",
+        "Request Chunked Transfer-Encoding Enabled": "false",
+        "Request Content-Encoding": "DISABLED",
+        "Request Content-Type": "",
+        "Request Date Header Enabled": "True",
+        "Request Header Attributes Pattern": null,
+        "Request User-Agent": null,
+        "Response Body Attribute Name": null,
+        "Response Body Attribute Size": "256",
+        "Response Body Ignored": "false",
+        "Response Cache Enabled": "false",
+        "Response Cache Size": "10MB",
+        "Response Cookie Strategy": "DISABLED",
+        "Response Generation Required": "true",
+        "Response FlowFile Naming Strategy": "RANDOM",
+        "Response Header Request Attributes Enabled": "false",
+        "Response Header Request Attributes Prefix": null,
+        "Response Redirects Enabled": "True",
+        "Accept": "*/*",
+        "Content-Length": "0",
+        "User-Agent": "curl/8.18.0",
+        "x-ibm-client-id": "8062dfddae5764c433fbf3d61e620ac6",
+        "x-ibm-client-secret": "f4868ee4e3a8d6cb027979ebbfbcad6a"
+      },
+      "state": "RUNNING"
+    },
+    "ReplaceText": {
+      "id": "4789e978-ea04-3135-cb26-9d37271951ad",
+      "type": "org.apache.nifi.processors.standard.ReplaceText",
+      "properties": {
+        "Replacement Strategy": "Literal Replace",
+        "Search Value": "(?s)(^.*$)",
+        "Replacement Value": "{\n    \"errorResponse\": {\n        \"statusCode\": \"${errorCode}\",\n        \"statusreason\": \"${errorReason}\",\n        \"customcode\": \"${customcode}\",\n        \"description\": \"${errorDesc}\"\n    }\n}",
+        "Text to Prepend": null,
+        "Text to Append": null,
+        "Character Set": "UTF-8",
+        "Maximum Buffer Size": "1 MB",
+        "Evaluation Mode": "Entire text",
+        "Line-by-Line Evaluation Mode": "All"
+      },
+      "state": "RUNNING"
+    },
+    "RouteOnAttribute": {
+      "id": "08190258-3eea-3014-5425-89254d638e63",
+      "type": "org.apache.nifi.processors.standard.RouteOnAttribute",
+      "properties": {
+        "Routing Strategy": "Route to Property name",
+        "error": "${invokehttp.status.code:startsWith(\"2\"):not()}",
+        "success": "${invokehttp.status.code:equals(\"200\")}"
+      },
+      "state": "RUNNING"
+    },
+    "HandleHttpRequest": {
+      "id": "29ea17b0-c895-3538-5f86-545115570958",
+      "type": "org.apache.nifi.processors.standard.HandleHttpRequest",
+      "properties": {
+        "Listening Port": "8072",
+        "Hostname": "localhost",
+        "SSL Context Service": null,
+        "HTTP Protocols": "HTTP_1_1",
+        "HTTP Context Map": "bc637794-019c-1000-a817-68da4bee71bd",
+        "Allowed Paths": "/node/.*",
+        "Default URL Character Set": "UTF-8",
+        "Allow GET": "true",
+        "Allow POST": "true",
+        "Allow PUT": "true",
+        "Allow DELETE": "true",
+        "Allow HEAD": "false",
+        "Allow OPTIONS": "false",
+        "Maximum Threads": "200",
+        "Request Header Maximum Size": "8 KB",
+        "Additional HTTP Methods": null,
+        "Client Authentication": "No Authentication",
+        "Container Queue Size": "50",
+        "Multipart Request Max Size": "1 MB",
+        "Multipart Read Buffer Size": "512 KB",
+        "Parameters to Attributes": ".*"
+      },
+      "state": "RUNNING"
+    },
+    "HandleHttpResponse": {
+      "id": "5da92610-2ced-3f84-3d50-7e68b39c14d5",
+      "type": "org.apache.nifi.processors.standard.HandleHttpResponse",
+      "properties": {
+        "HTTP Status Code": "${invokehttp.status.code}",
+        "HTTP Context Map": "bc637794-019c-1000-a817-68da4bee71bd",
+        "Attributes for HTTP Response": null
+      },
+      "state": "RUNNING"
+    }
+  },
+  "connections": [
+    {
+      "source": "EvaluateJsonPath",
+      "destination": "ReplaceText",
+      "relationships": [
+        "failure",
+        "matched"
+      ]
+    },
+    {
+      "source": "RouteOnAttribute",
+      "destination": "EvaluateJsonPath",
+      "relationships": [
+        "error"
+      ]
+    },
+    {
+      "source": "ReplaceText",
+      "destination": "HandleHttpResponse",
+      "relationships": [
+        "success"
+      ]
+    },
+    {
+      "source": "ReplaceText",
+      "destination": "HandleHttpResponse",
+      "relationships": [
+        "success"
+      ]
+    },
+    {
+      "source": "EvaluateJsonPath",
+      "destination": "InvokeHTTP",
+      "relationships": [
+        "matched"
+      ]
+    },
+    {
+      "source": "RouteOnAttribute",
+      "destination": "EvaluateJsonPath",
+      "relationships": [
+        "success"
+      ]
+    },
+    {
+      "source": "HandleHttpRequest",
+      "destination": "EvaluateJsonPath",
+      "relationships": [
+        "success"
+      ]
+    },
+    {
+      "source": "EvaluateJsonPath",
+      "destination": "ReplaceText",
+      "relationships": [
+        "matched"
+      ]
+    },
+    {
+      "source": "InvokeHTTP",
+      "destination": "RouteOnAttribute",
+      "relationships": [
+        "Failure",
+        "Response"
+      ]
+    }
+  ]
+}
