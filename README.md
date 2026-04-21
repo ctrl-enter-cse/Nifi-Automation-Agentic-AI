@@ -132,3 +132,12 @@ Terminal: [Deployment] Creating Logic_Dummy Workspace... DONE
 
 > [!NOTE]
 > The generation logic is now driven by `scripts/flow_rules.json`, allowing for rule-based flow construction before the deployment starts.
+> Generated Username [845aed5e-20b8-4dc3-86e5-14d8a77db7f8]
+Generated Password [7sjqmuL/fm1FPHP69ORi/J8nfXnSyaHN]
+$env:PYTHONPATH="."; python scripts/fetch_group.py "NiFi_Flow login flow" --visual
+$env:PYTHONPATH="."; python scripts/fetch_group.py "DMS login" --visual
+$env:PYTHONPATH="."; python scripts/test_nifi_client.py
+$env:PYTHONPATH="."; python scripts/control_flow.py start "NiFi_Flow login flow"
+$env:PYTHONPATH="."; python scripts/update_processor.py "HandleHttpRequest" "Listening Port" "8072" --group "NiFi_Flow login flow"
+$env:PYTHONPATH="."; python scripts/flow_generator.py curl --location --request POST 'https://fakestoreapi.com/auth/login' --header 'Content-Type: application/json' --data '{\"username\": \"mor_2314\", \"password\": \"83r5^_\"}' --httpRequest $env:PYTHONPATH="."; python scripts/config_manager.py details Generated_Flow_login
+
